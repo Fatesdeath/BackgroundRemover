@@ -1,0 +1,7 @@
+torch==2.4.1
+torchvision==0.19.1
+torch-directml==0.2.5.dev240914
+transformers==4.57.6
+timm==1.0.30
+kornia==0.8.3
+Pillow==12.3.0
