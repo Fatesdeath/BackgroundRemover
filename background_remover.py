@@ -1,24 +1,14 @@
-from pathlib import Path
+from model_manager import get_model
 
 import torch
 from PIL import Image, ImageFilter
 from torchvision import transforms
 from transformers import AutoModelForImageSegmentation
 
-
 try:
     import torch_directml
 except ImportError:
     torch_directml = None
-
-
-MODEL_FOLDER = (
-    Path.home()
-    / "Downloads"
-    / "BackgroundRemover"
-    / "models"
-    / "RMBG-2.0"
-)
 
 
 class BackgroundRemover:
@@ -28,8 +18,10 @@ class BackgroundRemover:
         print(f"Using device: {self.device}")
         print("Loading RMBG-2.0...")
 
+        model_folder = get_model()
+
         self.model = AutoModelForImageSegmentation.from_pretrained(
-            MODEL_FOLDER,
+            model_folder,
             trust_remote_code=True
         )
 
@@ -57,9 +49,7 @@ class BackgroundRemover:
         tolerance=0,
         edge_smoothness=0
     ):
-        image = Image.open(
-            image_path
-        ).convert("RGB")
+        image = Image.open(image_path).convert("RGB")
 
         original_size = image.size
 
@@ -87,13 +77,9 @@ class BackgroundRemover:
 
         prediction = prediction[0].squeeze()
 
-        mask = transforms.ToPILImage()(
-            prediction
-        )
+        mask = transforms.ToPILImage()(prediction)
 
-        mask = mask.resize(
-            original_size
-        )
+        mask = mask.resize(original_size)
 
         if tolerance > 0:
             mask = self.apply_tolerance(
@@ -108,9 +94,7 @@ class BackgroundRemover:
                 )
             )
 
-        result = image.convert(
-            "RGBA"
-        )
+        result = image.convert("RGBA")
 
         result.putalpha(mask)
 
@@ -123,9 +107,7 @@ class BackgroundRemover:
         mask,
         tolerance
     ):
-        threshold = int(
-            tolerance * 2.55
-        )
+        threshold = int(tolerance * 2.55)
 
         return mask.point(
             lambda value:
